@@ -1,52 +1,37 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
 
-	"github.com/bantl23/gauche/term"
+	"github.com/bantl23/gauche/prompt"
 )
 
 func mainWithReturn() int {
-	t, err := term.NewTerm()
+	p, err := prompt.NewPrompt(&prompt.Config{
+		Prompt:   "gauche> ",
+		ExitText: "quit",
+	})
 	if err != nil {
-		fmt.Println("unable to initialize term")
-		return 1
+		fmt.Println("unable to get new prompt")
 	}
-	defer t.Restore()
+	defer p.Close()
 
 	done := false
-	reader := bufio.NewReader(os.Stdin)
-	prompt := true
 	for !done {
-		if prompt == true {
-			fmt.Printf("gauche> ")
-		}
-		item, err := reader.ReadByte()
+		line, err := p.Readline()
 		if err != nil {
 			if err == io.EOF {
-				prompt = false
-				continue
-			} else {
-				fmt.Printf("Error: %#v\r\n", err)
 				done = true
 				continue
 			}
-		}
-
-		prompt = true
-		if item >= 33 && item <= 126 {
-			fmt.Printf("%03d 0x%02x %s\r\n", item, item, string(item))
-		} else {
-			fmt.Printf("%03d 0x%02x\r\n", item, item)
-		}
-
-		if item == 'q' || item == 0x03 {
+			fmt.Println("Error getting line")
 			done = true
 			continue
 		}
+
+		fmt.Printf("\r\nmain: %s\r\n", line)
 	}
 
 	return 0
